@@ -8,6 +8,7 @@ namespace AnimalShelterProgram
 {
     public class AlphabeticalStrategy : ISortingStrategy
     {
+        //Quick sort alphabetically
         public void Sort(List<Animal> animals)
         {
             if (animals == null || animals.Count <= 1)
@@ -20,6 +21,7 @@ namespace AnimalShelterProgram
 
         public void DisplaySortedAnimals(List<Animal> animals)
         {
+            Console.Clear();
             Console.WriteLine("Our animals in alphabetical order:\r\n");
             foreach (Animal animal in animals)
             {

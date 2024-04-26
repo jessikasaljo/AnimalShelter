@@ -5,6 +5,7 @@ using AnimalShelterProgram.Shelters;
 using AnimalShelterProgram.SortingStrategies;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Reflection.Metadata;
@@ -19,19 +20,20 @@ namespace AnimalShelterProgram
         //Shelters
         CityShelter cityShelter;
         ForestShelter forestShelter;
+        AnimalShelter currentShelter;
         public MainMenu mainMenu;
 
 
         //Dictionaries
-        Dictionary<string, AnimalFactory> factories;
-        Dictionary<string, List<Animal>> animalLists;
+        Dictionary<string, AnimalFactory> currentFactories;
+        Dictionary<string, List<Animal>> currentAnimalLists;
 
 
-        // Constructor
+        //Constructor
         AnimalShelterManager()
         {
-            factories = new Dictionary<string, AnimalFactory>();
-            animalLists = new Dictionary<string, List<Animal>>();
+            currentFactories = new Dictionary<string, AnimalFactory>();
+            currentAnimalLists = new Dictionary<string, List<Animal>>();
         }
 
 
@@ -60,59 +62,49 @@ namespace AnimalShelterProgram
         //Runs the manager
         public void RunManager()
         {
-            AnimalShelter currentShelter = mainMenu.currentShelter;
+            currentShelter = mainMenu.currentShelter;
+            currentFactories = mainMenu.currentFactories;
             string shelterType = currentShelter.Type;
-            Console.WriteLine($"Welcome to the {shelterType} Shelter!\r\nWhat would you like to do?\r\n");
-            Console.Write("1. Meet the animals\r\n" +
-                          "2. Adopt an animal\r\n" +
-                          "3. Surrender an animal\r\n" +
-                          "4. Sort animals\r\n" +
-                          "5. Switch shelters\r\n" +
-                          "9. Close application\r\n" +
-                          "\r\nEnter your choice: ");
+            Console.WriteLine($"Welcome to the {shelterType} Shelter!\r\nWhat would you like to do?");
+
+
 
             while (true)
             {
-                try
+                int userInput = GetValidIntegerInput("\r\n1. Meet the animals\r\n" +
+                                                    "2. Adopt an animal\r\n" +
+                                                    "3. Surrender an animal\r\n" +
+                                                    "4. Sort animals\r\n" +
+                                                    "5. Switch shelters\r\n" +
+                                                    "9. Close application\r\n" +
+                                                    "\r\nEnter your choice: ");
+
+                Console.Clear();
+                switch (userInput)
                 {
-                    int userInput = Convert.ToInt32(Console.ReadLine());
-                    Console.Clear();
-                    switch (userInput)
-                    {
-                        case 1:
-                            AnimalsBySpecies();
-                            MoreInfoMenu();
-                            break;
-                        case 2:
-                            AdoptAnimal();
-                            break;
-                        case 3:
-                            AddAnimal();
-                            break;
-                        case 4:
-                            SortAnimals();
-                            break;
-                        case 5:
-                            if (mainMenu.currentShelter is CityShelter)
-                            {
-                                currentShelter = forestShelter;
-                            }
-                            else if (mainMenu.currentShelter is ForestShelter)
-                            {
-                                currentShelter = cityShelter;
-                            }
-                            currentShelter.Run();
-                            break;
-                        case 9:
-                            Console.WriteLine("Thank you for visiting our animal shelter!");
-                            Environment.Exit(0);
-                            break;
-                    }
-                }
-                catch
-                {
-                    Console.Write("Unvalid input. Please enter a valid number: ");
-                    continue;
+                    case 1:
+                        DisplayAnimalsBySpecies();
+                        MeetAnimal();
+                        break;
+                    case 2:
+                        AdoptAnimal();
+                        break;
+                    case 3:
+                        AddAnimal();
+                        break;
+                    case 4:
+                        SortAnimals();
+                        break;
+                    case 5:
+                        SwitchShelter();
+                        break;
+                    case 9:
+                        Console.WriteLine("Thank you for visiting our animal shelter!");
+                        Environment.Exit(0);
+                        break;
+                    default:
+                        Console.WriteLine("Unvalid input. Please enter a valid number.");
+                        continue;
                 }
             }
         }
@@ -128,43 +120,86 @@ namespace AnimalShelterProgram
         }
 
 
-        //Interaction menu
-        void MoreInfoMenu()
+        //Choose animal to interact with
+        void MeetAnimal()
         {
-            Console.Write("Enter the ID number of the animal you would like to know more about: ");
+            List<Animal> currentShelterAnimals = GetCurrentAnimals();
+
+
             while (true)
             {
-                try
-                {
-                    int userInput = Convert.ToInt32(Console.ReadLine());
-                    Animal animalToInteractWith = animalLists.Values.SelectMany(animalList => animalList).FirstOrDefault(animal => animal.Id == userInput);
+                int userInput = GetValidIntegerInput("Enter the ID number of the animal you are interested in: ");
+                Animal animalToInteractWith = currentShelterAnimals.FirstOrDefault(animal => animal.Id == userInput);
 
-                    if (animalToInteractWith != null)
-                    {
-                        animalToInteractWith.DisplayInfo();
-                        Interact(animalToInteractWith);
-                    }
-                    else
-                    {
-                        Console.Write("Sorry, we have no animal with that ID. Please enter a valid ID number: ");
-                    }
-                }
-                catch
+                if (animalToInteractWith != null)
                 {
-                    Console.Write("Unvalid input. Please enter a valid ID number: ");
+                    animalToInteractWith.DisplayInfo();
+                    Interact(animalToInteractWith);
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine("We have no animal with that ID. Please enter a valid ID number.\r\n");
                 }
             }
         }
 
 
-        //Functions for showing the different lists, based on current shelter
-        void AnimalsBySpecies()
+        //Interact with an animal
+        void Interact(Animal animal)
         {
-            string currentShelter = mainMenu.currentShelter.Type;
-            Console.WriteLine($"These are all the animals in the {currentShelter} Shelter's care:\r\n");
+            string pronoun = animal.Gender.ToLower() == "male" ? "him" : (animal.Gender.ToLower() == "female" ? "her" : "them");
 
-            var filteredAnimalLists = animalLists.Where(kvp => kvp.Value.Any(animal => animal.Shelter == currentShelter))
+            while (true)
+            {
+                int userInput = GetValidIntegerInput($"How do you want to approach {animal.Name}?\r\n\r\n" +
+                                     $"1. Say hello\r\n" +
+                                     $"2. Insult {pronoun}\r\n" +
+                                     $"3. Compliment {pronoun}\r\n" +
+                                     $"4. Show {pronoun} a toy\r\n" +
+                                     $"5. Sing {pronoun} a song\r\n" +
+                                     "\r\nEnter your choice: ");
+
+                IBehaviourState behaviourState = null;
+                switch (userInput)
+                {
+                    case 1:
+                        animal.SayHello(animal);
+                        break;
+                    case 2:
+                        behaviourState = new AggressiveState();
+                        break;
+                    case 3:
+                        behaviourState = new ShyState();
+                        break;
+                    case 4:
+                        behaviourState = new PlayfulState();
+                        break;
+                    case 5:
+                        behaviourState = new CalmState();
+                        break;
+                    default:
+                        Console.Write("Unvalid input. Please enter a valid number: ");
+                        continue;
+                }
+                if (userInput > 1 && userInput <= 5)
+                {
+                    animal.SetBehaviour(behaviourState);
+                    behaviourState.PerformBehaviour(animal);
+                }
+                BackToMainMenu();
+            }
+        }
+
+
+        //Displays the different lists, based on current shelter
+        void DisplayAnimalsBySpecies()
+        {
+            string currentShelterType = mainMenu.currentShelter.Type;
+            var filteredAnimalLists = currentAnimalLists.Where(kvp => kvp.Value.Any(animal => animal.Shelter == currentShelterType))
                                      .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            Console.WriteLine($"These are all the animals in the {currentShelterType} Shelter's care:\r\n");
 
             foreach (var kvp in filteredAnimalLists)
             {
@@ -172,7 +207,7 @@ namespace AnimalShelterProgram
                 List<Animal> animals = kvp.Value;
 
                 Console.WriteLine($"Animals of species: {species}");
-                foreach (Animal animal in animals.Where(animal_ => animal_.Shelter == currentShelter))
+                foreach (Animal animal in animals.Where(animal_ => animal_.Shelter == currentShelterType))
                 {
                     Console.WriteLine($"{animal.Name}, ID: {animal.Id}");
                 }
@@ -181,15 +216,15 @@ namespace AnimalShelterProgram
         }
 
 
-        //Add new animal ÄNDRA DENNA SÅ DEN SKRIVER UT TYPERNA DYNAMISKT. BEROENDE PÅ SHELTER OCKSÅ
+        //Surrender an animal to the shelter
         void AddAnimal()
         {
             string currentShelter = mainMenu.currentShelter.Type;
 
-            var filteredAnimalLists = animalLists.Where(kvp => kvp.Value.Any(animal => animal.Shelter == currentShelter))
+            var filteredAnimalLists = currentAnimalLists.Where(kvp => kvp.Value.Any(animal => animal.Shelter == currentShelter))
                                      .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-            Console.WriteLine("We can only accept the animal you've brought if it is of one of the following species:\r\n");
+            Console.WriteLine("We accept the following species:\r\n");
             HashSet<string> printedSpecies = new HashSet<string>();
 
             foreach (var kvp in filteredAnimalLists)
@@ -204,206 +239,142 @@ namespace AnimalShelterProgram
                 }
             }
 
-            Console.Write("\r\nEnter the type of animal you would like to surrender (in singular): ");
-            string speciesInput = Console.ReadLine().ToLower();
+            string speciesInput = GetValidStringInput("\r\nEnter the type of animal you would like to surrender (in singular): ").ToLower();
 
             while (!filteredAnimalLists.ContainsKey(speciesInput))
-            { 
-                    Console.Write("\r\nWe can't accept this type of animal. Please enter one of the accepted species in singular: ");
-                    speciesInput = Console.ReadLine().ToLower();
+            {
+                speciesInput = GetValidStringInput("\r\nWe can't accept this type of animal. Please enter one of the accepted species in singular: ").ToLower();
             }
 
             while (true)
             {
-                try
-                {
-                    Console.Write($"\r\nEnter a name for the {speciesInput}: ");
-                    string nameInput = Console.ReadLine();
-                    Console.Write($"Enter {nameInput}'s age in years: ");
-                    int ageInput;
+                string nameInput = GetValidStringInput($"\r\nEnter a name for the {speciesInput}: ");
+                TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
+                nameInput = textInfo.ToTitleCase(nameInput);
 
-                    while (true)
-                    {
-                        try
-                        {
-                            ageInput = Convert.ToInt32(Console.ReadLine());
-                            break;
-                        }
-                        catch
-                        {
-                            Console.Write("\r\nUnvalid input, please enter a number (integer): ");
-                        }
+                int ageInput = GetValidIntegerInput($"Enter {nameInput}'s age in years: ");
 
-                    }
+                Console.Write($"Enter {nameInput}'s colour: ");
+                string colourInput = GetValidStringInput($"Enter {nameInput}'s colour: ").ToLower();
 
-                    while (ageInput < 0)
-                    {
-                        Console.Write("\r\nUnvalid input, please enter a valid non-negative number for age: ");
-                        ageInput = Convert.ToInt32(Console.ReadLine());
-                    }
+                string genderInput = GetValidGenderInput($"Enter {nameInput}'s gender (non-binary, male or female): ");
 
-                    Console.Write($"Enter {nameInput}'s colour: ");
-                    string colourInput = Console.ReadLine().ToLower();
-                    Console.Write($"Enter {nameInput}'s gender (non-binary, male or female): ");
-                    string genderInput = Console.ReadLine().ToLower();
-
-                    if (genderInput == "non-binary" || genderInput == "male" || genderInput == "female")
-                    {
-                        Animal newAnimal = factories[speciesInput].GetCreatedAnimal(nameInput, ageInput, genderInput, colourInput);
-                        AddAnimalToList(speciesInput, newAnimal);
-                        Console.WriteLine($"\r\nYou have surrendered {nameInput} to the shelter.\r\n" +
-                                          $"We will do our best to find {nameInput} a good home!\r\n");
-                        BackToMainMenu();
-                        break;
-                    }
-                    else
-                    {
-                        while (genderInput != "non-binary" && genderInput != "male" && genderInput != "female")
-                        {
-                            Console.Write("\r\nUnvalid gender, please enter one of the given genders: ");
-                            genderInput = Console.ReadLine().ToLower();
-                        }
-                    }
-                }
-                catch
-                {
-                    Console.WriteLine($"Unvalid input, please enter one of the accepted species: ");
-                    continue;
-                }
+                Animal newAnimal = currentFactories[speciesInput].GetCreatedAnimal(nameInput, ageInput, genderInput, colourInput);
+                AddAnimalToList(speciesInput, newAnimal);
+                Console.WriteLine($"\r\nYou have surrendered {nameInput} to the shelter.\r\n" +
+                                    $"We will do our best to find {nameInput} a good home!");
+                break;
             }
+            BackToMainMenu();
         }
 
 
         //Add animal to list
         public void AddAnimalToList(string species, Animal animal)
         {
-            if (!animalLists.ContainsKey(species))
+            if (!currentAnimalLists.ContainsKey(species))
             {
-                animalLists[species] = new List<Animal>();
+                currentAnimalLists[species] = new List<Animal>();
             }
-            animalLists[species].Add(animal);
+            currentAnimalLists[species].Add(animal);
         }
 
 
         //Adopt an animal
         void AdoptAnimal()
         {
-            Console.WriteLine("These are our adoptable animals:\r\n");
-            foreach (List<Animal> list in animalLists.Values)
+            List<Animal> currentShelterAnimals = GetCurrentAnimals();
+
+            if (currentShelterAnimals == null || !currentShelterAnimals.Any())
             {
-                foreach (Animal animal in list)
+                Console.WriteLine("There are no animals to adopt.");
+                BackToMainMenu();
+                return;
+            }
+       
+            Console.WriteLine("These are our adoptable animals:\r\n");
+
+            foreach (Animal animal in currentShelterAnimals)
+            {
+                if (animal.IsAdopted == false)
                 {
-                    if (animal.IsAdopted == false)
-                    {
-                        string species = animal.GetType().Name.ToLower();
-                        Console.WriteLine($"{animal.Name}, {species}. ID: {animal.Id}");
-                    }
+                    string species = animal.GetType().Name.ToLower();
+                    Console.WriteLine($"{animal.Name}, {species}. ID: {animal.Id}");
                 }
             }
 
-            Console.Write("\r\nEnter the ID of the animal you would like to adopt: ");
             while (true)
             {
-                try
-                {
-                    int animalToAdoptId = Convert.ToInt32(Console.ReadLine());
-                    Animal animalToAdopt = animalLists.Values.SelectMany(animalList => animalList).FirstOrDefault(animal => animal.Id == animalToAdoptId);
+                int userInput = GetValidIntegerInput("\r\nEnter the ID of the animal you would like to adopt: ");
+                Animal animalToAdopt = currentShelterAnimals.FirstOrDefault(animal => animal.Id == userInput);
 
-                    if (animalToAdopt != null)
+                if (animalToAdopt != null)
+                {
+                    if (animalToAdopt.IsAdopted)
                     {
-                        if (animalToAdopt.IsAdopted)
-                        {
-                            Console.Write($"\r\nSorry, {animalToAdopt.Name} is already adopted. Please enter the ID of another animal: ");
-                        }
-                        else
-                        {
-                            animalToAdopt.IsAdopted = true;
-                            Console.WriteLine($"\r\nYou have adopted {animalToAdopt.Name}. Congratulations!");
-                            break;
-                        }
+                        Console.Write($"\r\nSorry, {animalToAdopt.Name} is already adopted. Please enter the ID of another animal: ");
                     }
                     else
                     {
-                        Console.Write("Sorry, we have no animal with that ID. Please enter a valid ID number: ");
+                        animalToAdopt.IsAdopted = true;
+                        Console.WriteLine($"\r\nYou have adopted {animalToAdopt.Name}. Congratulations!");
+                        break;
                     }
                 }
-                catch
+                else
                 {
-                    Console.Write("Unvalid input. Please enter a valid ID number: ");
+                    Console.Write("We have no animal with that ID. Please enter a valid ID number.\r\n");
                 }
             }
             BackToMainMenu();
         }
 
 
-        //Interact with an animal
-        void Interact (Animal animal)
+        //Switch shelters
+        void SwitchShelter()
         {
-            Console.Write($"How do you want to approach {animal.Name}?\r\n\r\n" +
-                          $"1. Say hello\r\n" +
-                          $"2. Insult them\r\n" +
-                          $"3. Compliment them\r\n" +
-                          $"4. Show them a toy\r\n" +
-                          $"5. Sing a song to them\r\n" +
-                          "\r\nEnter your choice: ");
-
-            while (true)
+            if (currentShelter is CityShelter)
             {
-                try
-                {
-                    int userInput = Convert.ToInt32(Console.ReadLine());
-                    IBehaviourState behaviourState = null;
-                    switch (userInput)
-                    {
-                        case 1:
-                            animal.SayHello(animal);
-                            break;
-                        case 2:
-                            behaviourState = new AggressiveState();
-                            break;
-                        case 3:
-                            behaviourState = new ShyState();
-                            break;
-                        case 4:
-                            behaviourState = new PlayfulState();
-                            break;
-                        case 5:
-                            behaviourState = new CalmState();
-                            break;
-                        default:
-                            Console.Write("Unvalid input. Please enter a valid number: ");
-                            continue;
-                    }
-                    if (userInput != 1)
-                    {
-                        animal.SetBehaviour(behaviourState);
-                        behaviourState.PerformBehaviour(animal);
-                    }
-                    BackToMainMenu();
-                }
-                catch
-                {
-                    Console.Write("Unvalid input. Please enter a valid number: ");
-                }
+                UpdateCurrentShelter(forestShelter);
             }
+            else if (currentShelter is ForestShelter)
+            {
+                UpdateCurrentShelter(cityShelter);
+            }
+            currentShelter.Run();
         }
 
+        void UpdateCurrentShelter(AnimalShelter newShelter)
+        {
+            mainMenu.currentShelter = newShelter;
+            currentShelter = mainMenu.currentShelter;
+            mainMenu.currentFactories = newShelter.factories;
+            currentFactories = mainMenu.currentFactories;
+        }
+
+
+        //Sorting code
         void SortAnimals()
         {
-            List<Animal> allAnimals = animalLists.Values.SelectMany(animalList => animalList).ToList();
+            List<Animal> currentShelterAnimals = GetCurrentAnimals();
 
-            Console.WriteLine($"How do you want to sort the animals?\r\n" +
-                  $"1. By name\r\n" +
-                  $"2. By age\r\n" +
-                  $"3. By ID\r\n");
+            if (currentShelterAnimals == null || !currentShelterAnimals.Any())
+            {
+                Console.WriteLine("There are no animals to sort.");
+                BackToMainMenu();
+                return;
+            }
 
             while (true)
             {
-                try
+                int userInput = GetValidIntegerInput($"How do you want to sort the animals?\r\n" +
+                                                     $"1. By name\r\n" +
+                                                     $"2. By age\r\n" +
+                                                     $"3. By ID\r\n");
+
+                if (userInput >= 1 && userInput <= 3)
                 {
-                    int userInput = Convert.ToInt32(Console.ReadLine());
                     ISortingStrategy sortingStrategy = null;
-                    Console.Clear();
                     switch (userInput)
                     {
                         case 1:
@@ -415,20 +386,84 @@ namespace AnimalShelterProgram
                         case 3:
                             sortingStrategy = new ByIDStrategy();
                             break;
-                        default:
-                            Console.Write("Unvalid input. Please enter a valid number: ");
-                            continue;
                     }
-                    sortingStrategy.Sort(allAnimals);
-                    BackToMainMenu();
+                    sortingStrategy.Sort(currentShelterAnimals);
                     break;
                 }
-                catch
+                else
                 {
-                    Console.Write("Unvalid input. Please enter a valid number: ");
-                    continue;
+                    Console.WriteLine("Invalid input. Please enter a valid number.");
+                }
+            }
+            BackToMainMenu();
+        }
+
+
+        //Get a list of all the animals in the current shelter
+        List<Animal> GetCurrentAnimals()
+        {
+            string currentShelterType = mainMenu.currentShelter.Type;
+
+            var filteredAnimalLists = currentAnimalLists.Where(kvp => kvp.Value.Any(animal => animal.Shelter == currentShelterType))
+                                      .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            List<Animal> allAnimals = filteredAnimalLists.Values.SelectMany(animalList => animalList).ToList();
+            return allAnimals;
+        }
+
+
+        //Get valid input from the user
+        public int GetValidIntegerInput(string message)
+        {
+            int userInput;
+            while (true)
+            {
+                Console.Write(message);
+                if (int.TryParse(Console.ReadLine(), out userInput))
+                {
+                    return userInput;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a valid number.");
                 }
             }
         }
+
+        string GetValidStringInput(string message)
+        {
+            while (true)
+            {
+                Console.Write(message);
+                string userInput = Console.ReadLine().Trim();
+                if (!string.IsNullOrEmpty(userInput))
+                {
+                    return userInput;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please write something.");
+                }
+            }
+        }
+
+        string GetValidGenderInput(string message)
+        {
+            string[] validGenders = { "non-binary", "male", "female" };
+            while (true)
+            {
+                Console.Write(message);
+                string userInput = Console.ReadLine().ToLower();
+                if (validGenders.Contains(userInput))
+                {
+                    return userInput;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter 'non-binary', 'male', or 'female'.");
+                }
+            }
+        }
+
     }
 }

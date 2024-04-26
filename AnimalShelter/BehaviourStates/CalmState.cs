@@ -10,7 +10,8 @@ namespace AnimalShelterProgram.BehaviourStates
     {
         public void PerformBehaviour(Animal animal)
         {
-            Console.WriteLine($"{animal.Name} lets you pet them.");
+            string pronoun = animal.Gender.ToLower() == "male" ? "him" : (animal.Gender.ToLower() == "female" ? "her" : "them");
+            Console.WriteLine($"{animal.Name} lets you pet {pronoun}.");
         }
     }
 }

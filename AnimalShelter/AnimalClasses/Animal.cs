@@ -58,7 +58,7 @@ namespace AnimalShelterProgram
         {
             Console.Clear();
             string species = GetType().Name.ToLower();
-            Console.WriteLine($"{Name} is a {Colour.ToLower()} {Age} year old {Gender.ToLower()} {species}.");
+            Console.WriteLine($"{Name} is a {Age} year old {Gender.ToLower()} {Colour.ToLower()} {species}.");
             
             if (IsAdopted)
             {

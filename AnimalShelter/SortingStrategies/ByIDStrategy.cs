@@ -8,6 +8,7 @@ namespace AnimalShelterProgram.SortingStrategies
 {
     public class ByIDStrategy : ISortingStrategy
     {
+        //Merge sort by ID
         public void Sort(List<Animal> animals)
         {
             if (animals == null || animals.Count <= 1)
@@ -20,6 +21,7 @@ namespace AnimalShelterProgram.SortingStrategies
 
         public void DisplaySortedAnimals(List<Animal> animals)
         {
+            Console.Clear();
             Console.WriteLine("Our animals sorted by ID:\r\n");
             foreach (Animal animal in animals)
             {

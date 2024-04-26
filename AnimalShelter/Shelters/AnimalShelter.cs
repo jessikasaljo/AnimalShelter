@@ -10,9 +10,14 @@ namespace AnimalShelterProgram.Shelters
     public class AnimalShelter
     {
         //Fields
+        public Dictionary<string, AnimalFactory> factories = new Dictionary<string, AnimalFactory>();
+        public Dictionary<string, List<Animal>> animalLists = new Dictionary<string, List<Animal>>();
+
         protected AnimalShelterManager shelterManager;
         protected AnimalShelter animalShelter;
+
         public string Type { get; set; }
+
 
         //Constructor
         protected AnimalShelter()
@@ -24,7 +29,7 @@ namespace AnimalShelterProgram.Shelters
 
 
         //Calls the ShelterManager run function
-        public virtual void Run()
+        public void Run()
         {
             shelterManager.RunManager();
         }

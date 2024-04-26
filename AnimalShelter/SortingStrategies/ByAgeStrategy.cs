@@ -8,6 +8,7 @@ namespace AnimalShelterProgram
 {
     public class ByAgeStrategy : ISortingStrategy
     {
+        //Merge sort by age
         public void Sort(List<Animal> animals)
         {
             if (animals == null || animals.Count <= 1)
@@ -15,12 +16,12 @@ namespace AnimalShelterProgram
 
             MergeSort(animals, 0, animals.Count - 1);
             DisplaySortedAnimals(animals);
-
         }
 
 
         public void DisplaySortedAnimals(List<Animal> animals)
         {
+            Console.Clear();
             Console.WriteLine("Our animals sorted by age:\r\n");
             foreach (Animal animal in animals)
             {

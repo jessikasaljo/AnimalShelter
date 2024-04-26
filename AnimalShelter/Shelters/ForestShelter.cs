@@ -10,11 +10,6 @@ namespace AnimalShelterProgram.Shelters
 {
     public class ForestShelter : AnimalShelter
     {
-        //Fields
-        public Dictionary<string, AnimalFactory> factories = new Dictionary<string, AnimalFactory>();
-        public Dictionary<string, List<Animal>> animalLists = new Dictionary<string, List<Animal>>();
-
-
         //Singleton
         static ForestShelter instance;
 
@@ -51,15 +46,16 @@ namespace AnimalShelterProgram.Shelters
             Bird stella = new Bird { Name = "Stella", Age = 2, Gender = "Male", Colour = "Yellow" };
             Fox micke = new Fox { Name = "Micke", Age = 1, Gender = "Male", Colour = "Red" };
             Frog trevor = new Frog { Name = "Trevor", Age = 2, Gender = "Male", Colour = "Green" };
+            Bird polly = new Bird { Name = "Polly", Age = 18, Gender = "Female", Colour = "Red and green" };
+            Fox vixen = new Fox() { Name = "Vixen", Age = 5, Gender = "Female", Colour = "White" };
+            Bird tweety = new Bird() { Name = "Tweety", Age = 20, Gender = "Male", Colour = "Yellow" };
 
             shelterManager.AddAnimalToList("bird", stella);
             shelterManager.AddAnimalToList("fox", micke);
             shelterManager.AddAnimalToList("frog", trevor);
-        }
-
-        public override void Run()
-        {
-            shelterManager.RunManager();
+            shelterManager.AddAnimalToList("bird", polly);
+            shelterManager.AddAnimalToList("fox", vixen);
+            shelterManager.AddAnimalToList("bird", tweety);
         }
     }
 }

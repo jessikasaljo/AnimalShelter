@@ -10,11 +10,6 @@ namespace AnimalShelterProgram.Shelters
 {
     public class CityShelter : AnimalShelter
     {
-        //Fields
-        public Dictionary<string, AnimalFactory> factories = new Dictionary<string, AnimalFactory>();
-        public Dictionary<string, List<Animal>> animalLists = new Dictionary<string, List<Animal>>();
-
-
         //Singleton
         static CityShelter instance;
 
@@ -49,16 +44,14 @@ namespace AnimalShelterProgram.Shelters
             Cat potRoast = new Cat { Name = "Pot Roast", Age = 3, Gender = "Female", Colour = "White" };
             Dog barkRuffalo = new Dog { Name = "Bark Ruffalo", Age = 5, Gender = "Male", Colour = "Brown" };
             Dog nala = new Dog { Name = "Nala", Age = 6, Gender = "Female", Colour = "White" };
+            Cat elfie = new Cat { Name = "Elfie", Age = 11, Gender = "Female", Colour = "Brown and white tabby" };
+            Cat gimli = new Cat { Name = "Gimli", Age = 13, Gender = "Male", Colour = "Brown tabby" };
 
             shelterManager.AddAnimalToList("cat", potRoast);
             shelterManager.AddAnimalToList("dog", barkRuffalo);
             shelterManager.AddAnimalToList("dog", nala);
-        }
-
-
-        public override void Run()
-        {
-            shelterManager.RunManager();
+            shelterManager.AddAnimalToList("cat", elfie);
+            shelterManager.AddAnimalToList("cat", gimli);
         }
     }
 }
